@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Promedios</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            transition: background-color 0.5s ease;
+        }
+
+        body.dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .floating-window {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        .floating-window.dark-mode {
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+
+        .floating-window h1 {
+            margin-bottom: 20px;
+        }
+
+        .note-input {
+            display: block;
+            margin: 10px auto;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 80%;
+            transition: border-color 0.5s ease;
+        }
+
+        .note-input.dark-mode {
+            background-color: #2a2a2a;
+            color: #ffffff;
+            border-color: #555555;
+        }
+
+        .add-note {
+            display: block;
+            margin: 10px auto;
+            padding: 10px 20px;
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            background-color: transparent;
+            color: #4CAF50;
+            cursor: pointer;
+            transition: border-color 0.5s ease, color 0.5s ease;
+        }
+
+        .add-note:hover {
+            border-color: #4CAF50;
+            color: #388E3C;
+        }
+
+        .dark-mode .add-note {
+            border-color: #555555;
+            color: #76FF03;
+        }
+
+        .dark-mode .add-note:hover {
+            border-color: #76FF03;
+            color: #64DD17;
+        }
+
+        #calculate-average {
+            display: block;
+            margin: 10px auto;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.5s ease;
+        }
+
+        #calculate-average:hover {
+            background-color: #45a049;
+        }
+
+        .dark-mode #calculate-average {
+            background-color: #76FF03;
+            color: #000000;
+        }
+
+        .dark-mode #calculate-average:hover {
+            background-color: #64DD17;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+            transition: background-color 0.5s ease;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+            border-radius: 10px;
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        .dark-mode .modal-content {
+            background-color: #333333;
+            color: #ffffff;
+        }
+
+        #close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        #close:hover,
+        #close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .dark-mode #close {
+            color: #ffffff;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+            color: #4CAF50;
+            transition: color 0.5s ease;
+        }
+
+        .theme-toggle:hover {
+            color: #388E3C;
+        }
+
+        .dark-mode .theme-toggle {
+            color: #76FF03;
+        }
+
+        .dark-mode .theme-toggle:hover {
+            color: #64DD17;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+        <div class="floating-window">
+            <h1>Coloque su nota</h1>
+            <div id="input-container">
+                <input type="text" class="note-input" placeholder="Ingrese nota (C, B, A, AD, 0-20)" oninput="handleInput(this)" onkeypress="handleKeyPress(event)">
+            </div>
+            <button id="calculate-average" onclick="calculateAverage()">Promedio</button>
+        </div>
+        <div id="modal" class="modal">
+            <div class="modal-content">
+                <span id="close">&times;</span>
+                <p id="average-result"></p>
+            </div>
+        </div>
+    </div>
+    <script>
+        let inputCount = 1;
+
+        function addNoteInput() {
+            inputCount++;
+            const inputContainer = document.getElementById('input-container');
+            const newInput = document.createElement('input');
+            newInput.type = 'text';
+            newInput.className = 'note-input';
+            newInput.placeholder = 'Ingrese nota (C, B, A, AD, 0-20)';
+            newInput.oninput = function() {
+                handleInput(newInput);
+            };
+            newInput.onkeypress = function(event) {
+                handleKeyPress(event);
+            };
+            inputContainer.appendChild(newInput);
+            newInput.focus();
+        }
+
+        function handleInput(input) {
+            if (input.value === '') {
+                input.remove();
+                inputCount--;
+
+                const inputs = document.querySelectorAll('.note-input');
+                for (let i = 0; i < inputs.length - 1; i++) {
+                    inputs[i].addEventListener('input', function() {
+                        this.nextElementSibling.focus();
+                    });
+                }
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                addNoteInput();
+                event.preventDefault();
+            }
+        }
+
+        function calculateAverage() {
+            const inputs = document.querySelectorAll('.note-input');
+            const noteValues = {
+                'C': 8,
+                'B': 12,
+                'A': 16,
+                'AD': 20
+            };
+
+            let sum = 0;
+            let count = 0;
+
+            inputs.forEach(input => {
+                const note = input.value.trim().toUpperCase();
+                if (noteValues.hasOwnProperty(note)) {
+                    sum += noteValues[note];
+                    count++;
+                } else if (!isNaN(note) && note !== '' && note >= 0 && note <= 20) {
+                    sum += parseFloat(note);
+                    count++;
+                }
+            });
+
+            if (count > 0) {
+                const average = sum / count;
+                let averageLetter;
+                if (average <= 10) {
+                    averageLetter = 'C';
+                } else if (average <= 14) {
+                    averageLetter = 'B';
+                } else if (average <= 18) {
+                    averageLetter = 'A';
+                } else {
+                    averageLetter = 'AD';
+                }
+                document.getElementById('average-result').innerHTML = `El promedio es: ${average.toFixed(2)}<br>Letra: ${averageLetter}`;
+                document.getElementById('modal').style.display = 'block';
+            } else {
+                alert('Por favor, ingrese al menos una nota válida.');
+            }
+        }
+
+        document.getElementById('close').addEventListener('click', function() {
+            document.getElementById('modal').style.display = 'none';
+        });
+
+        document.getElementById('calculate-average').addEventListener('click', calculateAverage);
+
+        function toggleTheme() {
+            const body = document.body;
+            body.classList.toggle('dark-mode');
+        }
+    </script>
+</body>
+</html>
